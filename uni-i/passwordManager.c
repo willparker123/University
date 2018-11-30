@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdarg.h>
 
-int usernameMax = 10;
+int usernameMax = 11;
 
 typedef struct
 {
