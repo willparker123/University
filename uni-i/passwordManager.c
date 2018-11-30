@@ -5,7 +5,9 @@
 #include <assert.h>
 #include <stdarg.h>
 
-int usernameMax = 10;
+int maxlengthInput = 1024; //max length fgets() can use
+int maxlengthUsername = maxlengthInput; //length for both muser and user
+int maxlengthPassword = maxlengthInput; //length for both muser and user
 
 typedef struct
 {
@@ -113,8 +115,8 @@ int checkInput(int num,...)
 {
   va_list valist;
   va_start(valist, num);
-  char inputStdin[100];
-  fgets(inputStdin, 100, stdin);
+  char inputStdin[maxlengthInput];
+  fgets(inputStdin, maxlengthInput, stdin);
   inputStdin[strlen(inputStdin) - 1] = '\0';
   for (int i=0;i<num;i++)
   {
@@ -125,28 +127,39 @@ int checkInput(int num,...)
   return -1;
 }
 
+//reqests a username and password from stdin (with validation)
 void reqCred()
 {
   printf("Enter a username: ");
-  char name[usernameMax];
-  fgets(name, 100, stdin);
+  char name[maxlengthUsername];
+  fgets(name, maxlengthInput, stdin);
   name[strlen(name) - 1] = '\0';
-  if (strlen(name)>usernameMax)
+  if (strlen(name)>maxlengthUsername)
   {
     fprintf(stderr, "Invalid Username: Username too long.\n\n");
     reqCred();
   }
-  //newMUser(name, pass);
+  printf("Enter a password: ");
+  char pass[maxlengthPassword];
+  fgets(pass, maxlengthInput, stdin);
+  pass[strlen(pass) - 1] = '\0';
+  if (strlen(pass)>maxlengthPassword)
+  {
+    fprintf(stderr, "Invalid Password: Password too long.\n\n");
+    reqCred();
+  }
+  newMUser(name, pass);
 }
 
 //requests a username from stdin
-void reqLogin()
+muser *reqLogin()
 {
   printf("Do you have a Master account? [y/n]: ");
   int r = checkInput(4, "y","Y","n","N");
-  if (r==0 || r==1){reqCred();}
+  if (r==0 || r==1){return (reqCred())}
   else if (r==2 || r==3)
   {
+    muser
   }
   else
   {
@@ -169,7 +182,7 @@ void setup()
   if (fileCheck(file)) file = fopen("pmdata.txt", "r+");
   else file = fopen("pmdata.txt", "w+");
   //creates a dynamic array to point to all masterusers
-  muser *mlogins = malloc(sizeof(muser)*countMUsers());
+  muser *musers = malloc(sizeof(muser)*countMUsers());
   fclose(file);
 }
 
