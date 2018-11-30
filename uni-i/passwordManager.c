@@ -63,6 +63,7 @@ void arrayFree(array *arr)
   arr->length = arr->size = 0;
 }
 
+//takes n chars from the array and puts them in the arary sub
 void arrayTake(char src[], char sub[], int n)
 {
   for (int i=0;i<n;i++)
@@ -71,11 +72,22 @@ void arrayTake(char src[], char sub[], int n)
   }
 }
 
-//creates a new masteruser
-//muser *newMUser()
-//{
+char *mallocString(const char input[])
+{
+  char *s = malloc((sizeof(char)*strlen(input))+1);
+  return s;
+}
 
-//}
+//creates a new masteruser
+muser *newMUser(char *name, char *pass)
+{
+  muser *new = malloc(sizeof(muser));
+  cred *newCred = malloc(sizeof(cred));
+  new->cred = newCred;
+  newCred->username = mallocString(name);
+  newCred->passwrod = mallocString(pass);
+  return new;
+}
 
 int countMUsers()
 {
@@ -86,7 +98,7 @@ int countMUsers()
 }
 
 //checks username against file store
-bool checkUsername(char *line)
+bool writeToFile(char *line)
 {
   FILE *file = fopen("pmdata.txt", "r+");
   fprintf(file, "%s", line);
@@ -113,13 +125,26 @@ int checkInput(int num,...)
   return -1;
 }
 
+void reqCred()
+{
+  printf("Enter a username: ");
+  char name[usernameMax];
+  fgets(name, usernameMax, stdin);
+  name[strlen(name) - 1] = '\0';
+  if (strlen(name)>usernameMax) fprintf(stderr, "\n");
+  newMUser(name, pass);
+}
+
 //requests a username from stdin
 void reqLogin()
 {
   printf("Do you have a Master account? [y/n]: ");
   int r = checkInput(4, "y","n","Y","N");
   if (r==0 || r==1){}
-  else if (r==2 || r==3){}
+  else if (r==2 || r==3)
+  {
+    reqCred();
+  }
   else fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n");
 }
 
