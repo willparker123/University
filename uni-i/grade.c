@@ -11,7 +11,7 @@ enum { G1, G21, G22, G3, Fail, Invalid };
 int m=0;
 // Convert a mark string into an integer.  Return -1 if it is not valid.
 // The argument n is the length of the string (normally 1 or 2 or 3).
-
+ss
 // Convert a mark string into a grade.
 int grade(int m)
 {
