@@ -188,6 +188,7 @@ void options()
 
 void test()
 {
+  g
 }
 
 int main(int n, char *args[n])
