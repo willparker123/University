@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdarg.h>
 
-int usernameMax = 20;
+int usernameMax = 10;
 
 typedef struct
 {
@@ -97,7 +97,7 @@ bool checkUsername(char *line)
 }
 
 //requests an input and checks it against a given string
-bool checkInput(int num,...)
+int checkInput(int num,...)
 {
   va_list valist;
   va_start(valist, num);
@@ -106,18 +106,20 @@ bool checkInput(int num,...)
   inputStdin[strlen(inputStdin) - 1] = '\0';
   for (int i=0;i<num;i++)
   {
-    if (strlen(inputStdin)==0) return false;
-    if (!strcmp(inputStdin, va_arg(valist, char *))) return true;
+    if (strlen(inputStdin)==0) return -1;
+    if (!strcmp(inputStdin, va_arg(valist, char *))) return i;
   }
   va_end(valist);
-  return false;
+  return -1;
 }
 
 //requests a username from stdin
 void reqLogin()
 {
   printf("Do you have a Master account? [y/n]: ");
-  if (checkInput(4, "y","n","Y","N")){}
+  int r = checkInput(4, "y","n","Y","N");
+  if (r==0 || r==1){}
+  else if (r==2 || r==3){}
   else fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n");
 }
 
