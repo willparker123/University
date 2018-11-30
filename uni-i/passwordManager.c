@@ -131,7 +131,7 @@ void reqCred()
   char name[usernameMax];
   fgets(name, usernameMax, stdin);
   name[strlen(name) - 1] = '\0';
-  if (strlen(name)>usernameMax) fprintf(stderr, "\n");
+  if (strlen(name)>usernameMax) fprintf(stderr, "Invalid Username: Username too long.\n");
   newMUser(name, pass);
 }
 
