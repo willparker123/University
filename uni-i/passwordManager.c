@@ -85,7 +85,7 @@ muser *newMUser(char *name, char *pass)
   cred *newCred = malloc(sizeof(cred));
   new->cred = newCred;
   newCred->username = mallocString(name);
-  newCred->passwrod = mallocString(pass);
+  newCred->password = mallocString(pass);
   return new;
 }
 
@@ -129,21 +129,20 @@ void reqCred()
 {
   printf("Enter a username: ");
   char name[usernameMax];
-  fgets(name, usernameMax, stdin);
+  fgets(name, 100, stdin);
   name[strlen(name) - 1] = '\0';
   if (strlen(name)>usernameMax) fprintf(stderr, "Invalid Username: Username too long.\n");
-  newMUser(name, pass);
+  //newMUser(name, pass);
 }
 
 //requests a username from stdin
 void reqLogin()
 {
   printf("Do you have a Master account? [y/n]: ");
-  int r = checkInput(4, "y","n","Y","N");
-  if (r==0 || r==1){}
+  int r = checkInput(4, "y","Y","n","N");
+  if (r==0 || r==1){reqCred();}
   else if (r==2 || r==3)
   {
-    reqCred();
   }
   else fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n");
 }
@@ -176,6 +175,10 @@ void options()
   printf("------------------------------------------------------------\n");
 }
 
+void test()
+{
+}
+
 int main(int n, char *args[n])
 {
   setbuf(stdout, NULL);
@@ -184,8 +187,9 @@ int main(int n, char *args[n])
     setup();
     reqLogin();
   }
-  else if (n == 4)
+  else if (n == 2 && args[1]=="test")
   {
+    test();
   }
   else
   {
