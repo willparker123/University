@@ -131,7 +131,11 @@ void reqCred()
   char name[usernameMax];
   fgets(name, 100, stdin);
   name[strlen(name) - 1] = '\0';
-  if (strlen(name)>usernameMax) fprintf(stderr, "Invalid Username: Username too long.\n");
+  if (strlen(name)>usernameMax)
+  {
+    fprintf(stderr, "Invalid Username: Username too long.\n\n");
+    reqCred();
+  }
   //newMUser(name, pass);
 }
 
@@ -144,7 +148,11 @@ void reqLogin()
   else if (r==2 || r==3)
   {
   }
-  else fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n");
+  else
+  {
+    fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n\n");
+    reqLogin();
+  }
 }
 
 //checks if a file exists
@@ -172,7 +180,10 @@ void options()
   printf("where x is the option name as displayed in quotation marks. \n");
   printf("------------------------------------------------------------\n\n");
   printf("'login' : Allows a Master Username/Password to be inputted. \n\n");
-  printf("------------------------------------------------------------\n");
+  printf("------------------------------------------------------------\n\n");
+  printf("Enter an option: ");
+  int r = checkInput(1, "login");
+  if (r==0){setup();reqLogin();}
 }
 
 void test()
@@ -184,16 +195,20 @@ int main(int n, char *args[n])
   setbuf(stdout, NULL);
   if (n == 1)
   {
-    setup();
-    reqLogin();
+    options();
   }
-  else if (n == 2 && args[1]=="test")
+  else if (n == 2)
   {
-    test();
+    if (!strcmp(args[1],"login"))
+    {
+      setup();
+      reqLogin();
+    }
+    else fprintf(stderr, "Invalid Input: Option not found.\n");
   }
   else
   {
-    fprintf(stderr, "Use ./passwordManager to view options or perform first-time setup.\n");
+    fprintf(stderr, "Invalid Input: Use './passwordManager' to show options.\n");
     return -1;
   }
 }
