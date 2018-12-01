@@ -172,20 +172,23 @@ int checkInput(int num,...)
   return -1;
 }
 
-bool checkMUsers(char option, char *username, array *musers)
+bool checkMUsers(char option, char *string, array *musers)
 {
   if (option=='u')
   {
     for (int i=1;i<musers->length;i++)
     {
-      if (!strcmp(musers->content[i],username)) return true;
+      if (!strcmp(musers->content[i].cred->username,string)) return true;
     }
     return false;
   }
   else if (option=='p')
   {
-    if (!strcmp(,username)) return true;
-    else return false;
+    for (int i=1;i<musers->length;i++)
+    {
+      if (!strcmp(musers->content[i].cred->password,string)) return true;
+    }
+    return false;
   }
   else fprintf(stderr, "Error: function checkMusers(x)
                         failed with invalid x parmeter!\n");
@@ -201,7 +204,7 @@ void reqCred(array *musers, bool hasAccount)
   if (strlen(name)>maxlengthUsername)
   {
     fprintf(stderr, "Invalid Username: Username too long.\n\n");
-    reqCred();
+    reqCred(musers, hasAccount);
   }
   printf("Enter a password: ");
   char pass[maxlengthPassword];
@@ -210,7 +213,7 @@ void reqCred(array *musers, bool hasAccount)
   if (strlen(pass)>maxlengthPassword)
   {
     fprintf(stderr, "Invalid Password: Password too long.\n\n");
-    reqCred();
+    reqCred(musers, hasAccount);
   }
 
   if (hasAccount==true)
@@ -225,13 +228,13 @@ void reqCred(array *musers, bool hasAccount)
       else
       {
         printf("Incorrect Password. Please try again.\n");
-        reqCred();
+        reqCred(musers, true);
       }
     }
     else
     {
       printf("Incorrect Username.\n");
-      reqLogin();
+      reqLogin(musers);
     }
   }
   else newMUser(name, pass, musers);
