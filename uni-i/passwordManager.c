@@ -4,41 +4,14 @@
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
+#include "passwordManager.h"
 
 int maxlengthInput = 1024; //max length fgets() can use
-int maxlengthUsername = maxlengthInput; //length for both muser and user
-int maxlengthPassword = maxlengthInput; //length for both muser and user
-
-//structure for a set of credidentials
-typedef struct
-{
-  char *username;
-  char *password;
-} cred;
-
-//structure for a login for one website, with 'site' being an index
-typedef struct
-{
-  char *site;
-  cred *cred;
-} user;
-
-//structure for a master login, with a pointer to their stored accounts
-typedef struct
-{
-  cred *cred;
-  array *users;
-} muser;
-
-typedef struct
-{
-  muser *content;
-  size_t length;
-  size_t size;
-} array;
+int maxlengthUsername = 100; //length for both muser and user
+int maxlengthPassword = 100; //length for both muser and user
 
 //initialised a new array struct
-void arrayMuserInit(array *arr, size_t i)
+void arrayMUserInit(arrayMUsers *arr, size_t i)
 {
   if (i>0)
   {
@@ -48,25 +21,24 @@ void arrayMuserInit(array *arr, size_t i)
   }
   else
   {
-    fprintf(stderr, "Error: function arrayMuserInit(x) failed
-                    with invalid x parameter!");
+    fprintf(stderr, "Error: function arrayMuserInit(x) failed with invalid x parameter!\n");
   }
 }
 
 //insert an element into the content of the array struct,
 // and allocate more memory if needed by f=1.5
-void arrayMuserInsert(array *arr, muser *element)
+void arrayMUserInsert(arrayMUsers *arr, muser *element)
 {
   if (arr->length==arr->size)
   {
     arr->size *= 1.5;
     arr->content = realloc(arr->content, arr->size*sizeof(muser *));
   }
-  arr->content[arr->length++] = element;
+  arr->content[arr->length++] = *element;
 }
 
 //frees up the dymnamic array
-void arrayMuserFree(array *arr)
+void arrayMUserFree(arrayMUsers *arr)
 {
   free(arr->content);
   arr->content = NULL;
@@ -76,7 +48,7 @@ void arrayMuserFree(array *arr)
 
 
 //initialised a new array struct
-void arrayUserInit(array *arr, size_t i)
+void arrayUserInit(arrayUsers *arr, size_t i)
 {
   if (i>0)
   {
@@ -86,25 +58,24 @@ void arrayUserInit(array *arr, size_t i)
   }
   else
   {
-    fprintf(stderr, "Error: function arrayUserInit(x) failed
-                    with invalid x parameter!");
+    fprintf(stderr, "Error: function arrayUserInit(x) failed with invalid x parameter!\n");
   }
 }
 
 //insert an element into the content of the array struct,
 // and allocate more memory if needed by f=1.5
-void arrayUserInsert(array *arr, user *element)
+void arrayUserInsert(arrayUsers *arr, user *element)
 {
   if (arr->length==arr->size)
   {
     arr->size *= 1.5;
     arr->content = realloc(arr->content, arr->size*sizeof(user *));
   }
-  arr->content[arr->length++] = element;
+  arr->content[arr->length++] = *element;
 }
 
 //frees up the dymnamic array
-void arrayUserFree(array *arr)
+void arrayUserFree(arrayUsers *arr)
 {
   free(arr->content);
   arr->content = NULL;
@@ -129,17 +100,17 @@ char *mallocString(const char input[])
 }
 
 //creates a new masteruser
-void newMUser(char *name, char *pass, array *musers)
+void newMUser(char *name, char *pass, arrayMUsers *musers)
 {
   muser *new = malloc(sizeof(muser));
   cred *newCred = malloc(sizeof(cred));
   new->cred = newCred;
   newCred->username = mallocString(name);
   newCred->password = mallocString(pass);
-  arrayMuserInsert(musers, new);
+  arrayMUserInsert(musers, new);
 }
 
-int countMUsers(array *arr)
+int countMUsers(arrayMUsers *arr)
 {
   return (arr->length);
 }
@@ -166,91 +137,127 @@ int checkInput(int num,...)
   for (int i=0;i<num;i++)
   {
     if (strlen(inputStdin)==0) return -1;
-    if (!strcmp(inputStdin, va_arg(valist, char *))) return i;
+    if (!strcmp(inputStdin, va_arg(valist, char *))) {printf("\n**%s**\n",inputStdin); return i;}
   }
+  printf("\n**%s**\n",inputStdin);
   va_end(valist);
   return -1;
 }
 
-bool checkMUsers(char option, char *string, array *musers)
+bool checkMUsers(char option, char *string, arrayMUsers *musers)
 {
   if (option=='u')
   {
-    for (int i=1;i<musers->length;i++)
+    for (int i=1;i<musers->length-1;i++)
     {
-      if (!strcmp(musers->content[i].cred->username,string)) return true;
+      muser *pMU = &musers->content[i];
+      cred *pMUC = pMU->cred;
+      char *pName = pMUC->username;
+      if (!strcmp(pName,string)) {return true;break;}
     }
     return false;
   }
   else if (option=='p')
   {
-    for (int i=1;i<musers->length;i++)
+    for (int i=1;i<musers->length-1;i++)
     {
-      if (!strcmp(musers->content[i].cred->password,string)) return true;
+      muser *pMU = &musers->content[i];
+      cred *pMUC = pMU->cred;
+      char *pPass = pMUC->password;
+      if (!strcmp(pPass,string)) {return true;break;}
     }
     return false;
   }
-  else fprintf(stderr, "Error: function checkMusers(x)
-                        failed with invalid x parmeter!\n");
+  else fprintf(stderr, "Error: function checkMusers(x) failed with invalid x parmeter!\n");
+  return false;
 }
 
 //reqests a username and password from stdin (with validation)
-void reqCred(array *musers, bool hasAccount)
+void reqCredMUser(arrayMUsers *musers, bool hasAccount)
 {
-  printf("Enter a username: ");
-  char name[maxlengthUsername];
-  fgets(name, maxlengthInput, stdin);
-  name[strlen(name) - 1] = '\0';
-  if (strlen(name)>maxlengthUsername)
-  {
-    fprintf(stderr, "Invalid Username: Username too long.\n\n");
-    reqCred(musers, hasAccount);
-  }
-  printf("Enter a password: ");
-  char pass[maxlengthPassword];
-  fgets(pass, maxlengthInput, stdin);
-  pass[strlen(pass) - 1] = '\0';
-  if (strlen(pass)>maxlengthPassword)
-  {
-    fprintf(stderr, "Invalid Password: Password too long.\n\n");
-    reqCred(musers, hasAccount);
-  }
-
   if (hasAccount==true)
   {
-    //checks credidentials
-    if (checkMUsers(u, name, musers))
+    printf("Enter a username: ");
+    char name[maxlengthUsername];
+    fgets(name, maxlengthInput, stdin);
+    name[strlen(name) - 1] = '\0';
+    if (strlen(name)>maxlengthUsername)
     {
-      if (checkMUsers(p, pass, musers))
+      fprintf(stderr, "Invalid Username: Username too long.\n\n");
+      reqCredMUser(musers, hasAccount);
+    }
+    printf("\n**%s**\n",name);
+    bool correctUsername = checkMUsers('u', name, musers);
+    printf("%d",correctUsername);
+    //checks credidentials
+    if (correctUsername)
+    {
+      printf("Enter a password: ");
+      char pass[maxlengthPassword];
+      fgets(pass, maxlengthInput, stdin);
+      pass[strlen(pass) - 1] = '\0';
+      if (strlen(pass)>maxlengthPassword)
+      {
+        fprintf(stderr, "Invalid Password: Password too long.\n\n");
+        reqCredMUser(musers, hasAccount);
+      }
+      printf("\n**%s**\n",pass);
+      bool correctPassword = checkMUsers('p', pass, musers);
+      printf("%d",correctPassword);
+
+      if (correctPassword)
       {
         //do something when u and p are valid
       }
       else
       {
-        printf("Incorrect Password. Please try again.\n");
-        reqCred(musers, true);
+        printf("Incorrect Password. Please try again.\n\n");
+        reqCredMUser(musers, true);
       }
     }
     else
     {
-      printf("Incorrect Username.\n");
-      reqLogin(musers);
+      printf("Incorrect Username.\n\n");
+      reqLoginMUser(musers);
     }
   }
-  else newMUser(name, pass, musers);
+  else
+  {
+    printf("Enter a username: ");
+    char name[maxlengthUsername];
+    fgets(name, maxlengthInput, stdin);
+    name[strlen(name) - 1] = '\0';
+    if (strlen(name)>maxlengthUsername)
+    {
+      fprintf(stderr, "Invalid Username: Username too long.\n\n");
+      reqCredMUser(musers, hasAccount);
+    }
+    printf("Enter a password: ");
+    char pass[maxlengthPassword];
+    fgets(pass, maxlengthInput, stdin);
+    pass[strlen(pass) - 1] = '\0';
+    if (strlen(pass)>maxlengthPassword)
+    {
+      fprintf(stderr, "Invalid Password: Password too long.\n\n");
+      reqCredMUser(musers, hasAccount);
+    }
+    newMUser(name, pass, musers);
+    printf("Master Account created.\n\n\n");
+    reqOptions(musers);
+  }
 }
 
 //requests a username from stdin
-void reqLogin(array *musers)
+void reqLoginMUser(arrayMUsers *musers)
 {
   printf("Do you have a Master account? [y/n]: ");
   int r = checkInput(4, "y","Y","n","N");
-  if (r==0 || r==1){(reqCred(musers, true))}
-  else if (r==2 || r==3){reqCred(musers, false)}
+  if (r==0 || r==1){reqCredMUser(musers, true);}
+  else if (r==2 || r==3){reqCredMUser(musers, false);}
   else
   {
     fprintf(stderr, "Invalid Input: Please type 'y'/'n' for yes/no.\n\n");
-    reqLogin(musers);
+    reqLoginMUser(musers);
   }
 }
 
@@ -262,18 +269,29 @@ bool fileCheck(FILE *file)
 }
 
 //opens file or creates one with RW permissions if it doesnt exist
-array *setup()
+arrayMUsers *setup()
 {
   FILE *file = NULL;
   if (fileCheck(file)) file = fopen("pmdata.txt", "r+");
   else file = fopen("pmdata.txt", "w+");
-  array *musers = malloc(sizeof(array));
-  arrayMuserInit(musers, 1);
-  return musers;
   fclose(file);
 }
 
-void options(array *musers)
+void reqOptions(arrayMUsers *musers)
+{
+  printf("Enter an option: ");
+  int r = checkInput(2, "login","exit");
+  printf("\n");
+  if (r==0){reqLoginMUser(musers);}
+  if (r==1){arrayMUserFree(musers);exit(0);}
+  else
+  {
+    //fprintf(stderr, "Invalid Input: Option not found.\n\n");
+    //reqOptions(musers);
+  }
+}
+
+void options(arrayMUsers *musers)
 {
   printf("------------------------------------------------------------\n");
   printf("All options can be accessed by typing './passwordManager x' \n");
@@ -282,10 +300,7 @@ void options(array *musers)
   printf("'login' : Allows a Master Username/Password to be inputted. \n");
   printf("'exit'  : Clears all credentials including master users. \n\n");
   printf("------------------------------------------------------------\n\n");
-  printf("Enter an option: ");
-  int r = checkInput(2, "login","exit");
-  if (r==0){reqLogin(musers);}
-  if (r==1){arrayMuserFree(musers);}
+  reqOptions(musers);
 }
 
 void test()
@@ -295,6 +310,8 @@ void test()
 int main(int n, char *args[n])
 {
   setbuf(stdout, NULL);
+  arrayMUsers *musers = malloc(sizeof(arrayMUsers));
+  arrayMUserInit(musers, 1);
   setup();
 
   if (n == 1)
@@ -305,17 +322,18 @@ int main(int n, char *args[n])
   {
     if (!strcmp(args[1],"login"))
     {
-      reqLogin(musers);
+      reqLoginMUser(musers);
     }
     else if (!strcmp(args[1],"exit"))
     {
-      arrayMuserFree(musers);
+      arrayMUserFree(musers);
+      exit(0);
     }
     else fprintf(stderr, "Invalid Input: Option not found.\n");
   }
   else
   {
-    fprintf(stderr, "Invalid Input: Use './passwordManager' to show options.\n");
+    fprintf(stderr, "Invalid Input: Use './passwordManager' to show options or './passwordManager x' where x is an option.\n");
     return -1;
   }
 }
