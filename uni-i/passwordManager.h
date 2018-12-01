@@ -30,6 +30,8 @@ typedef struct
   muser *content;
   size_t length;
   size_t size;
+  bool loggedIn;
+  muser *current;
 } arrayMUsers;
 
 void reqCredMUser(arrayMUsers *musers, bool hasAccount);

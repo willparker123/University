@@ -105,8 +105,12 @@ void newMUser(char *name, char *pass, arrayMUsers *musers)
   muser *new = malloc(sizeof(muser));
   cred *newCred = malloc(sizeof(cred));
   new->cred = newCred;
+  name[strlen(name) - 1] = '\0';
+  pass[strlen(pass) - 1] = '\0';
   newCred->username = mallocString(name);
+  strcpy(newCred->username, name);
   newCred->password = mallocString(pass);
+  strcpy(newCred->password, pass);
   arrayMUserInsert(musers, new);
 }
 
@@ -137,39 +141,48 @@ int checkInput(int num,...)
   for (int i=0;i<num;i++)
   {
     if (strlen(inputStdin)==0) return -1;
-    if (!strcmp(inputStdin, va_arg(valist, char *))) {printf("\n**%s**\n",inputStdin); return i;}
+    if (!strcmp(inputStdin, va_arg(valist, char *))) {return i;}
   }
-  printf("\n**%s**\n",inputStdin);
   va_end(valist);
   return -1;
 }
 
-bool checkMUsers(char option, char *string, arrayMUsers *musers)
+//returns -1 if username/password not found, else returns the array index found
+int checkMUsers(char option, char *string, arrayMUsers *musers)
 {
   if (option=='u')
   {
-    for (int i=1;i<musers->length-1;i++)
+    for (int i=0;i<musers->length;i++)
     {
       muser *pMU = &musers->content[i];
       cred *pMUC = pMU->cred;
       char *pName = pMUC->username;
-      if (!strcmp(pName,string)) {return true;break;}
+      if (!strcmp(pName,string)) {return i;}
     }
-    return false;
+    return -1;
   }
   else if (option=='p')
   {
-    for (int i=1;i<musers->length-1;i++)
+    for (int i=0;i<musers->length;i++)
     {
       muser *pMU = &musers->content[i];
       cred *pMUC = pMU->cred;
       char *pPass = pMUC->password;
-      if (!strcmp(pPass,string)) {return true;break;}
+      if (!strcmp(pPass,string)) {return i;}
     }
-    return false;
+    return -1;
   }
   else fprintf(stderr, "Error: function checkMusers(x) failed with invalid x parmeter!\n");
-  return false;
+}
+
+void login(arrayMUsers *musers, char *name)
+{
+  int i = checkMUsers('u', name, musers);
+  musers->current = &musers->content[i];
+  musers->loggedIn = true;
+  printf("------------------------------------------------------------\n");
+  printf("--   Master Account: %s\n", name);
+  printf("------------------------------------------------------------\n\n");
 }
 
 //reqests a username and password from stdin (with validation)
@@ -186,11 +199,9 @@ void reqCredMUser(arrayMUsers *musers, bool hasAccount)
       fprintf(stderr, "Invalid Username: Username too long.\n\n");
       reqCredMUser(musers, hasAccount);
     }
-    printf("\n**%s**\n",name);
-    bool correctUsername = checkMUsers('u', name, musers);
-    printf("%d",correctUsername);
+    int correctUsername = checkMUsers('u', name, musers);
     //checks credidentials
-    if (correctUsername)
+    if (correctUsername<0)
     {
       printf("Enter a password: ");
       char pass[maxlengthPassword];
@@ -201,13 +212,11 @@ void reqCredMUser(arrayMUsers *musers, bool hasAccount)
         fprintf(stderr, "Invalid Password: Password too long.\n\n");
         reqCredMUser(musers, hasAccount);
       }
-      printf("\n**%s**\n",pass);
-      bool correctPassword = checkMUsers('p', pass, musers);
-      printf("%d",correctPassword);
+      int correctPassword = checkMUsers('p', pass, musers);
 
-      if (correctPassword)
+      if (correctPassword<0)
       {
-        //do something when u and p are valid
+        login(musers, name);
       }
       else
       {
@@ -269,7 +278,7 @@ bool fileCheck(FILE *file)
 }
 
 //opens file or creates one with RW permissions if it doesnt exist
-arrayMUsers *setup()
+void setup()
 {
   FILE *file = NULL;
   if (fileCheck(file)) file = fopen("pmdata.txt", "r+");
@@ -277,17 +286,31 @@ arrayMUsers *setup()
   fclose(file);
 }
 
+void logout(arrayMUsers *musers)
+{
+  if (musers->current != NULL)
+  {
+    musers->current = NULL;
+    musers->loggedIn = false;
+  }
+  else
+  {
+    fprintf(stderr, "Error: You are not logged in.\n\n\n\n");
+  }
+}
+
 void reqOptions(arrayMUsers *musers)
 {
   printf("Enter an option: ");
-  int r = checkInput(2, "login","exit");
+  int r = checkInput(3, "login","exit","logout");
   printf("\n");
   if (r==0){reqLoginMUser(musers);}
-  if (r==1){arrayMUserFree(musers);exit(0);}
+  else if (r==1){arrayMUserFree(musers);exit(0);}
+  else if (r==2){logout(musers);options(musers);}
   else
   {
-    //fprintf(stderr, "Invalid Input: Option not found.\n\n");
-    //reqOptions(musers);
+    fprintf(stderr, "Invalid Input: Option not found.\n\n");
+    reqOptions(musers);
   }
 }
 
@@ -297,8 +320,11 @@ void options(arrayMUsers *musers)
   printf("All options can be accessed by typing './passwordManager x' \n");
   printf("where x is the option name as displayed in quotation marks. \n");
   printf("------------------------------------------------------------\n\n");
-  printf("'login' : Allows a Master Username/Password to be inputted. \n");
-  printf("'exit'  : Clears all credentials including master users. \n\n");
+  printf("'login'   : Allows a master username/password to be inputted or \n");
+  printf("            a master account to be created (select 'n' in new promt).\n");
+  printf("'logout'  : Logs out of the current master account. \n");
+  printf("'account' : Shows all accounts under this master account. \n");
+  printf("'exit'    : Clears all credentials including master users. \n\n");
   printf("------------------------------------------------------------\n\n");
   reqOptions(musers);
 }
@@ -312,6 +338,8 @@ int main(int n, char *args[n])
   setbuf(stdout, NULL);
   arrayMUsers *musers = malloc(sizeof(arrayMUsers));
   arrayMUserInit(musers, 1);
+  musers->loggedIn = false;
+  musers->current = NULL;
   setup();
 
   if (n == 1)
@@ -328,6 +356,11 @@ int main(int n, char *args[n])
     {
       arrayMUserFree(musers);
       exit(0);
+    }
+    else if (!strcmp(args[1],"logout"))
+    {
+      logout(musers);
+      options(musers);
     }
     else fprintf(stderr, "Invalid Input: Option not found.\n");
   }
