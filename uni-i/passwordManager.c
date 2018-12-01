@@ -201,7 +201,7 @@ void reqCredMUser(arrayMUsers *musers, bool hasAccount)
     }
     int correctUsername = checkMUsers('u', name, musers);
     //checks credidentials
-    if (correctUsername<0)
+    if (correctUsername>=0)
     {
       printf("Enter a password: ");
       char pass[maxlengthPassword];
@@ -214,7 +214,7 @@ void reqCredMUser(arrayMUsers *musers, bool hasAccount)
       }
       int correctPassword = checkMUsers('p', pass, musers);
 
-      if (correctPassword<0)
+      if (correctPassword>=0)
       {
         login(musers, name);
       }
