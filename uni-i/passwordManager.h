@@ -41,3 +41,9 @@ void reqLoginMUser(arrayMUsers *musers);
 void reqOptions(arrayMUsers *musers);
 
 void options(arrayMUsers *musers);
+
+void account(arrayMUsers *musers);
+
+void adduser(arrayMUsers *musers);
+
+void rmuser(arrayMUsers *musers);
