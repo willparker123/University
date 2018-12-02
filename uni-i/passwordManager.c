@@ -105,8 +105,6 @@ void newMUser(char *name, char *pass, arrayMUsers *musers)
   muser *new = malloc(sizeof(muser));
   cred *newCred = malloc(sizeof(cred));
   new->cred = newCred;
-  name[strlen(name) - 1] = '\0';
-  pass[strlen(pass) - 1] = '\0';
   newCred->username = mallocString(name);
   strcpy(newCred->username, name);
   newCred->password = mallocString(pass);
@@ -157,7 +155,7 @@ int checkMUsers(char option, char *string, arrayMUsers *musers)
       muser *pMU = &musers->content[i];
       cred *pMUC = pMU->cred;
       char *pName = pMUC->username;
-      if (!strcmp(pName,string)) {return i;}
+      if (strcmp(pName,string)==0) {return i;}
     }
     return -1;
   }
@@ -177,12 +175,16 @@ int checkMUsers(char option, char *string, arrayMUsers *musers)
 
 void login(arrayMUsers *musers, char *name)
 {
-  int i = checkMUsers('u', name, musers);
-  musers->current = &musers->content[i];
-  musers->loggedIn = true;
-  printf("------------------------------------------------------------\n");
-  printf("--   Master Account: %s\n", name);
-  printf("------------------------------------------------------------\n\n");
+  if (musers->loggedIn) fprintf(stderr, "Error: Already logged in.\n");
+  else
+  {
+    int i = checkMUsers('u', name, musers);
+    musers->current = &musers->content[i];
+    musers->loggedIn = true;
+    printf("------------------------------------------------------------\n");
+    printf("--   Master Account: %s\n", name);
+    printf("------------------------------------------------------------\n\n");
+  }
 }
 
 //reqests a username and password from stdin (with validation)
@@ -299,14 +301,18 @@ void logout(arrayMUsers *musers)
   }
 }
 
+void
+
 void reqOptions(arrayMUsers *musers)
 {
   printf("Enter an option: ");
-  int r = checkInput(3, "login","exit","logout");
+  int r = checkInput(3, "login","exit","logout","account","options");
   printf("\n");
-  if (r==0){reqLoginMUser(musers);}
+  if (r==0){reqLoginMUser(musers);reqOptions(musers);}
   else if (r==1){arrayMUserFree(musers);exit(0);}
-  else if (r==2){logout(musers);options(musers);}
+  else if (r==2){logout(musers);reqOptions(musers);}
+  else if (r==3){}
+  else if (r==4){options(musers);}
   else
   {
     fprintf(stderr, "Invalid Input: Option not found.\n\n");
@@ -324,6 +330,7 @@ void options(arrayMUsers *musers)
   printf("            a master account to be created (select 'n' in new promt).\n");
   printf("'logout'  : Logs out of the current master account. \n");
   printf("'account' : Shows all accounts under this master account. \n");
+  printf("'options' : Shows all options.\n");
   printf("'exit'    : Clears all credentials including master users. \n\n");
   printf("------------------------------------------------------------\n\n");
   reqOptions(musers);
@@ -351,6 +358,7 @@ int main(int n, char *args[n])
     if (!strcmp(args[1],"login"))
     {
       reqLoginMUser(musers);
+      reqOptions(musers);
     }
     else if (!strcmp(args[1],"exit"))
     {
@@ -360,6 +368,15 @@ int main(int n, char *args[n])
     else if (!strcmp(args[1],"logout"))
     {
       logout(musers);
+      options(musers);
+    }
+    else if (!strcmp(args[1],"options"))
+    {
+      options(musers);
+    }
+    else if (!strcmp(args[1],"account"))
+    {
+
       options(musers);
     }
     else fprintf(stderr, "Invalid Input: Option not found.\n");
