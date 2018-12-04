@@ -36,7 +36,7 @@ export default class HomeScreen extends React.Component {
             {this._maybeRenderDevelopmentModeWarning()}
 
             <Text style={styles.nameText}>
-              Livitay
+              Livitaya
             </Text>
           </View>
 
