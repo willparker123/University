@@ -24,7 +24,9 @@ export default class HomeScreen extends React.Component {
           <View style={styles.welcomeContainer}>
             <Image
               source={
-                require('../assets/images/logoSmall.png') //online
+                __DEV__
+                  ? require('../assets/images/logoSmall.png') //../assets/images/logo.png
+                  : require('../assets/images/logoSmall.png')
               }
               style={styles.welcomeImage}
             />
@@ -35,9 +37,7 @@ export default class HomeScreen extends React.Component {
           <View style={styles.getStartedContainer}>
             {this._maybeRenderDevelopmentModeWarning()}
 
-            <Text style={styles.nameText}>
-              Livitaya
-            </Text>
+            <Text style={styles.nameText}>Livitay</Text>
           </View>
 
 
@@ -50,11 +50,9 @@ export default class HomeScreen extends React.Component {
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>
-            <TouchableOpacity onPress={this._handleWebsitePress} style={styles.websiteLink}>
+          <TouchableOpacity onPress={this._handleWebsitePress} style={styles.websiteLink}>
               <Text style={styles.websiteLinkText}>Here is our website! (In a tab)</Text>
             </TouchableOpacity>
-          </Text>
         </View>
       </View>
     );
@@ -66,7 +64,7 @@ export default class HomeScreen extends React.Component {
       return (
         <Text style={styles.developmentModeText}>
           Development mode is enabled, your app will be slower but you can use useful development
-          tools. {learnMoreButton}
+          tools.
         </Text>
       );
     } else {
@@ -84,7 +82,7 @@ export default class HomeScreen extends React.Component {
 
   _handleWebsitePress = () => {
     WebBrowser.openBrowserAsync(
-      'https://docs.expo.io/versions/latest/guides/up-and-running.html#can-t-see-your-changes'
+      'https://www.livitay.com'
     );
   };
 }
