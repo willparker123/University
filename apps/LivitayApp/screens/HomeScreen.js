@@ -24,9 +24,7 @@ export default class HomeScreen extends React.Component {
           <View style={styles.welcomeContainer}>
             <Image
               source={
-                __DEV__
-                  ? require('../assets/images/logo.png') //../assets/images/logo.png
-                  : require('../assets/images/logo.png')
+                require('../assets/images/logoSmall.png') //online
               }
               style={styles.welcomeImage}
             />
@@ -37,7 +35,7 @@ export default class HomeScreen extends React.Component {
           <View style={styles.getStartedContainer}>
             {this._maybeRenderDevelopmentModeWarning()}
 
-            <Text style={styles.getStartedText}>
+            <Text style={styles.nameText}>
               Livitay
             </Text>
           </View>
@@ -45,18 +43,18 @@ export default class HomeScreen extends React.Component {
 
 
           <View style={styles.helpContainer}>
-            <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
-              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
+            <TouchableOpacity onPress={this._handleWebsitePress} style={styles.websiteLink}>
+              <Text style={styles.websiteLinkText}>Here is our website!</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
+          <Text style={styles.tabBarInfoText}>
+            <TouchableOpacity onPress={this._handleWebsitePress} style={styles.websiteLink}>
+              <Text style={styles.websiteLinkText}>Here is our website! (In a tab)</Text>
+            </TouchableOpacity>
+          </Text>
         </View>
       </View>
     );
@@ -64,11 +62,6 @@ export default class HomeScreen extends React.Component {
 
   _maybeRenderDevelopmentModeWarning() {
     if (__DEV__) {
-      const learnMoreButton = (
-        <Text onPress={this._handleLearnMorePress} style={styles.helpLinkText}>
-          Learn more
-        </Text>
-      );
 
       return (
         <Text style={styles.developmentModeText}>
@@ -89,7 +82,7 @@ export default class HomeScreen extends React.Component {
     WebBrowser.openBrowserAsync('https://docs.expo.io/versions/latest/guides/development-mode');
   };
 
-  _handleHelpPress = () => {
+  _handleWebsitePress = () => {
     WebBrowser.openBrowserAsync(
       'https://docs.expo.io/versions/latest/guides/up-and-running.html#can-t-see-your-changes'
     );
@@ -117,8 +110,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   welcomeImage: {
-    width: 100,
-    height: 80,
+    width: 200,
+    height: 160,
     resizeMode: 'contain',
     marginTop: 3,
     marginLeft: -10,
@@ -138,9 +131,9 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     paddingHorizontal: 4,
   },
-  getStartedText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
+  nameText: {
+    fontSize: 24,
+    color: 'rgba(250,0,20, 1)',
     lineHeight: 24,
     textAlign: 'center',
   },
@@ -176,10 +169,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignItems: 'center',
   },
-  helpLink: {
+  websiteLink: {
     paddingVertical: 15,
   },
-  helpLinkText: {
+  websiteLinkText: {
     fontSize: 14,
     color: '#2e78b7',
   },
