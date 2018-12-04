@@ -49,6 +49,7 @@ export default class App extends React.Component {
     console.warn(error);
   };
 
+//when finished loading, isLoadingComplete: true
   _handleFinishLoading = () => {
     this.setState({ isLoadingComplete: true });
   };
