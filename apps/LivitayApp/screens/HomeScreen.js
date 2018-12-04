@@ -25,26 +25,24 @@ export default class HomeScreen extends React.Component {
             <Image
               source={
                 __DEV__
-                  ? require('../assets/images/logo.png')
-                  : require('../assets/images/robot-prod.png')
+                  ? require('../assets/images/logo.png') //../assets/images/logo.png
+                  : require('../assets/images/logo.png')
               }
               style={styles.welcomeImage}
             />
           </View>
 
+
+
           <View style={styles.getStartedContainer}>
             {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>Get started by opening</Text>
-
-            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/HomeScreen.js</MonoText>
-            </View>
 
             <Text style={styles.getStartedText}>
               Livitay
             </Text>
           </View>
+
+
 
           <View style={styles.helpContainer}>
             <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
