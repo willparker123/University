@@ -19,9 +19,9 @@ export default class App extends React.Component {
       );
     } else {
       return (
-
-        <View style={{padding:40}}}>
-          <Text>Livitay</Text>
+        <View style={styles.container}>
+          {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+          <AppNavigator />
         </View>
       );
     }
