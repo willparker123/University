@@ -63,12 +63,7 @@ char *getFilename()
   return filename;
 }
 
-void opPEN(state *s, unsigned char byte)
-{
-  s->pen = !s->pen;
-}
-
-void opDY(state *s, unsigned char byte, display *screen)
+int formatByte(unsigned char byte)
 {
   int c=0;
   if ((byte>>5 & 0x1) !=0)
@@ -77,6 +72,18 @@ void opDY(state *s, unsigned char byte, display *screen)
     c=-byte;
   }
   else c=byte;
+  return c;
+}
+
+void opPEN(state *s, unsigned char byte)
+{
+  s->pen = !s->pen;
+}
+
+void opDY(state *s, unsigned char byte, display *screen)
+{
+  int c=formatByte(byte);
+
   if (s->pen==true)
   {
     line(screen, s->cx, s->cy, s->cx+s->dx, s->cy+c);
@@ -88,13 +95,7 @@ void opDY(state *s, unsigned char byte, display *screen)
 
 void opDX(state *s, unsigned char byte)
 {
-  int c=0;
-  if ((byte>>5 & 0x1) !=0)
-  {
-    byte = ((~byte)+0x1) & 0x3F;
-    c=-byte;
-  }
-  else c=byte;
+  int c=formatByte(byte);
   s->dx = c;
   printf("\n%d\n\n\n", c);
 }
