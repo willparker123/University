@@ -3,6 +3,7 @@
 #include "logic.h"
 #include "play.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 void drawPieces(board *b, display *d)
 {
@@ -62,6 +63,7 @@ int main()
 {
   board *b = newBoard();
   b->current = b->topleft;
+  b->gameover = false;
   display *d = drawBoard(b);
   runGame(d, b);
 }

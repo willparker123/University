@@ -148,7 +148,7 @@ int *mouse(display *d) {
             SDL_Quit();
             exit(0);
         }
-        else if (event->type == SDL_KEYUP) {
+        else if (event->type == SDL_MOUSEBUTTONDOWN) {
             //TESTING
             int *coord = malloc(sizeof(int)*2);
             SDL_GetMouseState(&coord[0], &coord[1]);

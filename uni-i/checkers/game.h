@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 typedef enum COLOUR {WHITE = 0, BLACK = 1} COLOUR;
 typedef enum PIECE {EMPTY = 0, PAWNA, PAWNB, QUEENA, QUEENB} PIECE;
 
@@ -15,6 +17,7 @@ struct board
 {
   struct square *topleft;
   struct square *current;
+  bool gameover;
   int size;
 };
 

@@ -15,7 +15,7 @@ typedef struct turn turn;
 void runGame(display *d, board *b);
 
 //runs a single turn
-void runTurn(display *d, board *b);
+void runTurn(display *d, board *b, turn *t);
 
 //gets the coords of the piece selected
 void getCoords(board *b, turn *t);
@@ -23,8 +23,8 @@ void getCoords(board *b, turn *t);
 //sets turn->current to the selected piece
 void selectPiece(board *b, turn *t, display *d);
 
-//sets turn->player to A,B or O (error)
-void selectPlayer(turn *t);
+//returns A,B or O based on the piece selected.
+char selectPlayer(turn *t);
 
 //removes the yellow selection from the first click
 void deselect(turn *t, display *d);
@@ -37,6 +37,3 @@ void getCoordsN(board *b, turn *t);
 
 //checks for valid moves and moves the selected piece
 void movePiece(board *b, turn *t, display *d);
-
-//checks validity of moves and performs moving operations.
-void handlerSelection(board *b, turn *t, display *d);

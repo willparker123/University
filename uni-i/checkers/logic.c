@@ -13,14 +13,11 @@ void deselect(turn *t, display *d)
   else if (t->prev->piece == QUEENB) queen(d, t->x*64, t->y*64, 0x0198E100);
 }
 
-void selectPlayer(turn *t)
+char selectPlayer(turn *t)
 {
-  if (t->current->piece == PAWNA) t->player = 'A';
-  else if (t->current->piece == QUEENA) t->player = 'A';
-  else if (t->current->piece == PAWNB) t->player = 'B';
-  else if (t->current->piece == QUEENB) t->player = 'B';
-  else t->player = 'O';
-  printf("...%c...", t->player);
+  if (t->current->piece == PAWNA || t->current->piece == QUEENA) return 'A';
+  else if (t->current->piece == PAWNB || t->current->piece == QUEENB) return 'B';
+  else return 'O';
 }
 
 void selectNextPiece(board *b, turn *t, display *d)
@@ -39,11 +36,6 @@ void selectNextPiece(board *b, turn *t, display *d)
   if (t->current->piece!=EMPTY && t->prev->piece!=EMPTY)
   {
     drawSelect(d, t->xN*64, t->yN*64);
-  }
-  else
-  {
-    printf("Error: No piece selected.\n");
-    deselect(t, d);
   }
 }
 
@@ -67,49 +59,42 @@ void selectPiece(board *b, turn *t, display *d)
   }
 }
 
-void handlerSelection(board *b, turn *t, display *d)
-{
-  if (t->prev->piece==PAWNA)
-  {
-    if (t->current->piece==PAWNA)
-    {
-      deselect(t, d);
-      selectNextPiece(b, t, d);
-    }
-    else
-    {
-      printf("Error: Not a valid move.\n");
-      deselect(t, d);
-    }
-  }
-  else if (t->prev->piece==PAWNB)
-  {
-    if (t->current->piece==PAWNB)
-    {
-      deselect(t, d);
-      selectNextPiece(b, t, d);
-    }
-    else
-    {
-      printf("Error: Not a valid move.\n");
-      deselect(t, d);
-    }
-  }
-}
-
 void movePiece(board *b, turn *t, display *d)
 {
-  if (t->prev->piece==EMPTY)
+  if (t->player=='A')
   {
-    printf("Error: No piece selected.\n");
-    deselect(t, d);
+    if (t->current==t->prev->bot->left || t->current==t->prev->bot->right)
+    {
+      t->current->piece = t->prev->piece;
+      t->prev->piece = EMPTY;
+      drawSelect(d, t->xN*64, t->yN*64);
+      if (t->prev->colour == WHITE) box(d, t->x*64, t->y*64, 64, 64, 0x0);
+      else box(d, t->x*64, t->y*64, 64, 64, 0xFFFFFFFF);
+      deselect(t,d);
+    }
+    else
+    {
+      printf("Error: Invalid move.\n");
+      runTurn(d, b, t);
+    }
   }
-  else if (t->prev==t->current)
+  else
   {
-    printf("Error: Same piece selected.\n");
-    deselect(t, d);
+    if (t->current==t->prev->top->left || t->current==t->prev->top->right)
+    {
+      t->current->piece = t->prev->piece;
+      t->prev->piece = EMPTY;
+      drawSelect(d, t->xN*64, t->yN*64);
+      if (t->prev->colour == WHITE) box(d, t->x*64, t->y*64, 64, 64, 0x0);
+      else box(d, t->x*64, t->y*64, 64, 64, 0xFFFFFFFF);
+      deselect(t, d);
+    }
+    else
+    {
+      printf("Error: Invalid move.\n");
+      runTurn(d, b, t);
+    }
   }
-  handlerSelection(b, t, d);
 }
 
 void getCoords(board *b, turn *t)
@@ -128,28 +113,94 @@ void getCoordsN(board *b, turn *t)
   t->yN = posy.quot;
 }
 
-void runTurn(display *d, board *b)
+void runTurn(display *d, board *b, turn *t)
 {
-  turn *t = malloc(sizeof(turn));
   int *coord = mouse(d);
   t->x = coord[0];
   t->y = coord[1];
   getCoords(b, t);
   selectPiece(b, t, d);
-  selectPlayer(t);
-  t->prev = t->current;
-  int *coordN = mouse(d);
-  t->xN = coordN[0];
-  t->yN = coordN[1];
-  getCoordsN(b, t);
-  selectNextPiece(b, t, d);
-  movePiece(b, t, d);
-  free(t);
-  free(coord);
-  free(coordN);
+  if (selectPlayer(t)=='O')
+  {
+    printf("Error: No piece selected.\n");
+    t->prev = t->current;
+    deselect(t, d);
+    free(coord);
+    runTurn(d, b, t);
+  }
+  else if (selectPlayer(t)!=t->player)
+  {
+    printf("Error: Piece from wrong player selected.\n");
+    t->prev = t->current;
+    deselect(t, d);
+    free(coord);
+    runTurn(d, b, t);
+  }
+  else
+  {
+    t->prev = t->current;
+    int *coordN = mouse(d);
+    t->xN = coordN[0];
+    t->yN = coordN[1];
+    getCoordsN(b, t);
+    selectNextPiece(b, t, d);
+    while ((t->player=='A')&&(t->current->piece==PAWNA || t->current->piece==QUEENA))
+    {
+      deselect(t, d);
+      if (t->current==t->prev)
+      {
+        printf("Error: Same piece selected.\n");
+        drawSelect(d, t->x*64, t->y*64);
+      }
+      t->prev = t->current;
+      t->x = t->xN;
+      t->y = t->yN;
+      int *coordNN = mouse(d);
+      t->xN = coordNN[0];
+      t->yN = coordNN[1];
+      getCoordsN(b, t);
+      selectNextPiece(b, t, d);
+      deselect(t, d);
+      free(coordNN);
+    }
+    while ((t->player=='B')&&(t->current->piece==PAWNB || t->current->piece==QUEENB))
+    {
+      deselect(t, d);
+      if (t->current==t->prev)
+      {
+        printf("Error: Same piece selected.\n");
+        drawSelect(d, t->x*64, t->y*64);
+      }
+      t->prev = t->current;
+      t->x = t->xN;
+      t->y = t->yN;
+      int *coordNN = mouse(d);
+      t->xN = coordNN[0];
+      t->yN = coordNN[1];
+      getCoordsN(b, t);
+      selectNextPiece(b, t, d);
+      deselect(t, d);
+      free(coordNN);
+    }
+
+    movePiece(b, t, d);
+    t->prev = t->current;
+    free(coord);
+    free(coordN);
+
+    if (t->player=='A') t->player='B';
+    else t->player='A';
+  }
 }
 
 void runGame(display *d, board *b)
 {
-  for (int i=0;i<4;i++) {runTurn(d, b);}
+  turn *t = malloc(sizeof(turn));
+  t->player = 'A';
+  while (b->gameover==false)
+  {
+    printf("\n%c\n", t->player);
+    runTurn(d, b, t);
+  }
+  free(t);
 }
