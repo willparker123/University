@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include "display.h"
 
-enum OP {DX = 0x0, DY = 0x1, PEN = 0x3, U = 0xF};
+enum OP {DX = 0x0, DY = 0x1, PR = 0x2, DO = 0x3, U = 0xF};
 
 typedef struct
 {
@@ -15,6 +15,9 @@ typedef struct
   int cx;
   int cy;
   bool pen;
+  int dt;
+  int cop;
+  bool init;
 } state;
 
 //checks if a file exists
@@ -65,13 +68,24 @@ char *getFilename()
 
 int formatByte(unsigned char byte)
 {
-  int c=0;
-  if ((byte>>5 & 0x1) !=0)
+  div_t d = div(byte, 64);
+  int i = 0;
+  while (d.quot>0)
   {
-    byte = ((~byte)+0x1) & 0x3F;
+    d = div(d.quot, 64);
+    i++;
+  }
+  int c = 0;
+  int bits = (i+1)*6;
+  int maskbit = (int)(pow(2,bits)-1);
+  //aaprintf("\n%0x\n", maskbit);
+  if ((byte>>5) & 0x1)
+  {
+    byte = ((~byte)+0x1) & maskbit; //*(sizeof(byte)/6)
     c=-byte;
   }
   else c=byte;
+  printf("%d\n\n",byte);
   return c;
 }
 
@@ -82,7 +96,13 @@ void opPEN(state *s, unsigned char byte)
 
 void opDY(state *s, unsigned char byte, display *screen)
 {
-  int c=formatByte(byte);
+  int c=0;
+  if (!s->init) s->cop = byte;
+  else
+  {
+    s->cop = (s->cop << 6) | byte;
+  }
+  c=formatByte(s->cop);
 
   if (s->pen==true)
   {
@@ -91,13 +111,66 @@ void opDY(state *s, unsigned char byte, display *screen)
   s->cx = s->cx+s->dx;
   s->cy = s->cy+c;
   s->dx = 0;
+  s->init = false;
+  s->cop = 0;
 }
 
 void opDX(state *s, unsigned char byte)
 {
-  int c=formatByte(byte);
+  int c=0;
+  if (!s->init) s->cop = byte;
+  else
+  {
+    s->cop = (s->cop << 6) | byte;
+  }
+  c=formatByte(s->cop);
+
   s->dx = c;
-  printf("\n%d\n\n\n", c);
+  s->init = false;
+  s->cop = 0;
+}
+
+void opPR(state *s, unsigned char byte)
+{
+  if (!s->init)
+  {
+    s->cop = byte;
+    s->init = true;
+  }
+  else
+  {
+    s->cop = (s->cop << 6) | byte;
+  }
+}
+
+void opDT(state *s, unsigned char byte, display *screen)
+{
+  if (!s->init) pause(screen, s->dt);
+  else
+  {
+    pause(screen, s->cop);
+    s->dt = s->cop;
+    s->init=true;
+  }
+}
+
+void opKEY(display *screen)
+{
+  key(screen);
+}
+
+void opCOLOUR(state *s, display *screen)
+{
+  colour(screen, s->cop);
+}
+
+void opDO(state *s, unsigned char byte, display *screen)
+{
+  if (byte==0x0) opPEN(s, byte & 0x3F);
+  else if (byte==0x1) opDT(s, byte & 0x3F, screen);
+  else if (byte==0x2) clear(screen);
+  else if (byte==0x3) opKEY(screen);
+  else if (byte==0x4) opCOLOUR(s, screen);
 }
 
 void instruction(unsigned char byte, state *s, display *screen)
@@ -107,7 +180,8 @@ void instruction(unsigned char byte, state *s, display *screen)
 
   if (((byte>>6) & 0x0F) == DX) {opDX(s, byte & 0x3F);}
   else if (((byte>>6) & 0x0F) == DY) {opDY(s, byte & 0x3F, screen);}
-  else if (((byte>>6) & 0x0F) == PEN) {opPEN(s, byte & 0x3F);}
+  else if (((byte>>6) & 0x0F) == PR) {opPR(s, byte & 0x3F);}
+  else if (((byte>>6) & 0x0F) == DO) {opDO(s, byte & 0x3F, screen);}
   else fprintf(stderr, "Invalid Opcode.\n");
 }
 
@@ -126,6 +200,9 @@ void setup(state *s)
   s->cy = 0;
   s->pen = false;
   s->dx = 0;
+  s->cop = 0;
+  s->dt = 0;
+  s->init = false;
 }
 
 void showDisplay(display *screen)
@@ -145,11 +222,15 @@ int main()
     int bytesToRead = fileLength(file);
     unsigned char *filebytes = malloc(sizeof(unsigned char)*bytesToRead);
     filebytes = readFile(file, filebytes, bytesToRead);
-    display *screen = newDisplay("screen", 200, 200);
+    display *screen = newDisplay("screen", 600, 600);
     printf("%d\n", bytesToRead);
+    //unsigned char test[2];
+    //test[0] = 0x8F;
+    //test[1] = 0x0F;
+    //execute(2, test, s, screen);
     execute(bytesToRead, filebytes, s, screen);
-    //instruction(0x20,s);
-    //opDX(s, 0x1F & 0x3F);
+    ////instruction(0x20,s);
+    ////opDX(s, 0x1F & 0x3F);
     showDisplay(screen);
     closeFile(file);
     free(filebytes);
